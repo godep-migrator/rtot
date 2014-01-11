@@ -52,8 +52,22 @@ error if any:
 {"out":"wat is happening\n","err":"","exit":null}
 ```
 
-### a note on shebangs
+## A note on shebangs
 
 If the data POSTed to the server does not start with `#!`, a shebang
 of `#!/bin/bash` is prepended, otherwise it's assumed that the shebang
 provided will be understood by the kernel.
+
+## Job cleanup
+
+As mentioned above, jobs are not automatically garbage collected.
+Instead, it's up to you to clean up after yourself:
+
+``` bash
+curl -H 'Rtot-Secret: supersecret' \
+  -X DELETE \
+  http://other-server.example.com:8457/1
+```
+
+The response for a successful job delete will have a status of 204 and
+no body.
