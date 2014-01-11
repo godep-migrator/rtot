@@ -55,6 +55,8 @@ after_success:
     $TRAVIS_BUILD_DIR/build/rtot/rtot.src.tar.bz2 &&
   cd $TRAVIS_BUILD_DIR/build &&
   tar cjvf rtot.tar.bz2 rtot &&
-  mv -v rtot.tar.bz2 .tarball/
+  mv -v rtot.tar.bz2 .tarball/ &&
+  cd .tarball/ &&
+  sha1sum rtot.tar.bz2 rtot.src.tar.bz2 > SHA1SUMS
 notifications:
   email: github+rtot@modcloth.com
