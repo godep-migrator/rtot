@@ -24,13 +24,14 @@ test: build fmtpolice
 	$(GO) test -race $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(TARGETS)
 
 build: deps
-	$(GO) install $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
+	$(GO) install -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
 
 deps:
 	if [ ! -e $${GOPATH%%:*}/src/$(RTOT_PACKAGE) ] ; then \
 		mkdir -p $${GOPATH%%:*}/src/github.com/modcloth-labs ; \
 		ln -sv $(PWD) $${GOPATH%%:*}/src/$(RTOT_PACKAGE) ; \
 	fi
+	$(GO) get -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
 	$(GODEP) restore
 
 clean:
