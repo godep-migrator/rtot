@@ -1,0 +1,6 @@
+#!bash
+
+test -f ~/.profile && source ~/.profile
+
+cd /gopath/src/github.com/modcloth-labs/rtot
+byobu
