@@ -1,0 +1,18 @@
+{
+	"ImportPath": "github.com/modcloth-labs/rtot",
+	"GoVersion": "go1.2",
+	"Packages": [
+		"github.com/modcloth-labs/rtot"
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/inject",
+			"Rev": "346a984957aa24276ebc5e7b16b3ac6a50fe8138"
+		},
+		{
+			"ImportPath": "github.com/codegangsta/martini",
+			"Comment": "v0.1-62-gc9a4557",
+			"Rev": "c9a45576c532f3ee2af4cc4d9aaf6fe3cae79ce3"
+		}
+	]
+}
