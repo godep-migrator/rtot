@@ -57,6 +57,6 @@ after_success:
   tar cjvf rtot.tar.bz2 rtot &&
   mv -v rtot.tar.bz2 .tarball/ &&
   cd .tarball/ &&
-  sha1sum rtot.tar.bz2 rtot.src.tar.bz2 > SHA1SUMS
+  sha256sum rtot.tar.bz2 rtot.src.tar.bz2 > SHA256SUMS
 notifications:
   email: github+rtot@modcloth.com
