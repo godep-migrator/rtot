@@ -52,7 +52,7 @@ after_success:
   cd $TRAVIS_BUILD_DIR &&
   cp $HOME/gopath/bin/rtot-server $TRAVIS_BUILD_DIR/build/rtot/ &&
   git archive HEAD | bzip2 >
-    $TRAVIS_BUILD_DIR/build/rtot/rtot.src.tar.bz2 &&
+    $TRAVIS_BUILD_DIR/build/.tarball/rtot.src.tar.bz2 &&
   cd $TRAVIS_BUILD_DIR/build &&
   tar cjvf rtot.tar.bz2 rtot &&
   mv -v rtot.tar.bz2 .tarball/ &&
