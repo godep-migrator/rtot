@@ -3,3 +3,6 @@ language: go
 go:
 - 1.2
 - tip
+before_install: go get -x github.com/kr/godep
+install: make build
+script: make test
