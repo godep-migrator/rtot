@@ -9,3 +9,52 @@ env:
 before_install: go get -x github.com/kr/godep
 install: make build
 script: make test
+deploy:
+- provider: s3
+  access_key_id:
+    secure: "DqIQZa4h8OcSG8AdGVeuW9S8KzU+Gqi5eDq1ry1/1tgQo47lNNiz8Wuj2ykUQB4arF9Ur5KjwvgIs3bY/auZ+oG+2xnqgRvNZqpLXegNH7/QY1l4bDAvS/pSuROuhNN17NtcOwv3FU6gG69LfHPi+PSXXOApuv8PMYIIeqq+3V4="
+  secret_access_key:
+    secure: "co6xF+UNeJv+XANrvDK/BlecfnjeVKYCMV2wHXUGnEDPnQ1o0mJek27E9iTUbbSEhPpQazcb3tTZNXTeuRNm9T0zFHm0fUNOUs6tyY6e/8itwcqz/wZKSzw78MGLGQrojRc2BZG96gvEvGx3BZvOQ8TaUqGDLvv/N8m4rNBiXLQ="
+  bucket: modcloth-public-travis-artifacts
+  skip_cleanup: true
+  local-dir: $TRAVIS_BUILD_DIR/build/.tarball/
+  upload-dir: artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/rtot/$TRAVIS_COMMIT
+  on:
+    all_branches: true
+    go: 1.2
+- provider: s3
+  access_key_id:
+    secure: "DqIQZa4h8OcSG8AdGVeuW9S8KzU+Gqi5eDq1ry1/1tgQo47lNNiz8Wuj2ykUQB4arF9Ur5KjwvgIs3bY/auZ+oG+2xnqgRvNZqpLXegNH7/QY1l4bDAvS/pSuROuhNN17NtcOwv3FU6gG69LfHPi+PSXXOApuv8PMYIIeqq+3V4="
+  secret_access_key:
+    secure: "co6xF+UNeJv+XANrvDK/BlecfnjeVKYCMV2wHXUGnEDPnQ1o0mJek27E9iTUbbSEhPpQazcb3tTZNXTeuRNm9T0zFHm0fUNOUs6tyY6e/8itwcqz/wZKSzw78MGLGQrojRc2BZG96gvEvGx3BZvOQ8TaUqGDLvv/N8m4rNBiXLQ="
+  bucket: modcloth-public-travis-artifacts
+  skip_cleanup: true
+  local-dir: $TRAVIS_BUILD_DIR/build/.tarball/
+  upload-dir: artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/rtot/$TRAVIS_BRANCH
+  on:
+    all_branches: true
+    go: 1.2
+- provider: s3
+  access_key_id:
+    secure: "DqIQZa4h8OcSG8AdGVeuW9S8KzU+Gqi5eDq1ry1/1tgQo47lNNiz8Wuj2ykUQB4arF9Ur5KjwvgIs3bY/auZ+oG+2xnqgRvNZqpLXegNH7/QY1l4bDAvS/pSuROuhNN17NtcOwv3FU6gG69LfHPi+PSXXOApuv8PMYIIeqq+3V4="
+  secret_access_key:
+    secure: "co6xF+UNeJv+XANrvDK/BlecfnjeVKYCMV2wHXUGnEDPnQ1o0mJek27E9iTUbbSEhPpQazcb3tTZNXTeuRNm9T0zFHm0fUNOUs6tyY6e/8itwcqz/wZKSzw78MGLGQrojRc2BZG96gvEvGx3BZvOQ8TaUqGDLvv/N8m4rNBiXLQ="
+  bucket: modcloth-public-travis-artifacts
+  skip_cleanup: true
+  local-dir: $TRAVIS_BUILD_DIR/build/.tarball/
+  upload-dir: artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/rtot/$(git describe --always --tags)
+  on:
+    all_branches: true
+    go: 1.2
+after_success:
+- mkdir -p $TRAVIS_BUILD_DIR/build/rtot
+           $TRAVIS_BUILD_DIR/build/.tarball &&
+  cd $TRAVIS_BUILD_DIR &&
+  cp $HOME/gopath/bin/rtot-server $TRAVIS_BUILD_DIR/build/rtot/ &&
+  git archive HEAD | bzip2 >
+    $TRAVIS_BUILD_DIR/build/rtot/rtot.src.tar.bz2 &&
+  cd $TRAVIS_BUILD_DIR/build &&
+  tar cjvf rtot.tar.bz2 rtot &&
+  mv -v rtot.tar.bz2 .tarball/
+notifications:
+  email: github+rtot@modcloth.com
