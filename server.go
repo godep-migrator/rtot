@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/codegangsta/martini"
 	"github.com/codegangsta/martini-contrib/render"
@@ -42,9 +43,11 @@ func ServerMain(addr, secret string) {
 
 	app.Get("/", root)
 	app.Delete("/", die)
-	app.Delete("/:i", delJob)
-	app.Get("/:i", getJob)
 	app.Post("/", createJob)
+	app.Get("/all", allJobs)
+	app.Get("/:i", getJob)
+	app.Delete("/all", delAllJobs)
+	app.Delete("/:i", delJob)
 
 	logger.Printf("Serving at %s\n", addr)
 	http.ListenAndServe(addr, app)
@@ -69,15 +72,11 @@ func delJob(r render.Render, req *http.Request, params martini.Params) {
 		return
 	}
 
-	jobsMutex.Lock()
-	_, ok := jobs[i]
-	jobsMutex.Unlock()
-	if !ok {
+	if !jobs.Remove(i) {
 		r.JSON(404, noSuchJob)
 		return
 	}
 
-	delete(jobs, i)
 	r.JSON(204, "")
 }
 
@@ -91,20 +90,18 @@ func getJob(r render.Render, req *http.Request, params martini.Params) {
 		return
 	}
 
-	jobsMutex.Lock()
-	j, ok := jobs[i]
-	jobsMutex.Unlock()
-	if !ok {
-		r.JSON(404, noSuchJob)
+	j := jobs.Get(i)
+	if j == nil {
+		r.JSON(404, &jobResponse{Jobs: []*job{}})
 		return
 	}
 
 	if j.state != "complete" {
-		r.JSON(202, j)
+		r.JSON(202, &jobResponse{Jobs: []*job{j}})
 		return
 	}
 
-	r.JSON(200, j)
+	r.JSON(200, &jobResponse{Jobs: []*job{j}})
 }
 
 func createJob(r render.Render, req *http.Request) {
@@ -140,42 +137,47 @@ func createJob(r render.Render, req *http.Request) {
 
 	err = f.Chmod(0755)
 
-	jobNumMutex.Lock()
-	defer jobNumMutex.Unlock()
-	i := jobNum
-	jobNum += 1
+	var (
+		outbuf bytes.Buffer
+		errbuf bytes.Buffer
+	)
+
+	fname := f.Name()
+	f.Close()
+
+	cmd := exec.Command(fname)
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+
+	j := &job{
+		cmd:        cmd,
+		state:      "new",
+		outBuf:     &outbuf,
+		errBuf:     &errbuf,
+		createTime: time.Now().UTC(),
+	}
+	jobs.Add(j)
 
 	go func() {
-		var outbuf bytes.Buffer
-		var errbuf bytes.Buffer
-
-		fname := f.Name()
-		f.Close()
-
-		cmd := exec.Command(fname)
-		cmd.Stdout = &outbuf
-		cmd.Stderr = &errbuf
-
-		j := &job{
-			i:      i,
-			cmd:    cmd,
-			state:  "new",
-			outBuf: &outbuf,
-			errBuf: &errbuf,
-		}
-		jobsMutex.Lock()
-		jobs[i] = j
-		jobsMutex.Unlock()
-
 		j.state = "running"
+		j.startTime = time.Now().UTC()
 		j.exit = cmd.Run()
 		j.state = "complete"
+		j.completeTime = time.Now().UTC()
 
 		os.Remove(fname)
 	}()
 
-	r.JSON(201, map[string]string{
-		"message": "created job",
-		"href":    fmt.Sprintf("/%v", i),
-	})
+	r.JSON(201, &jobResponse{Jobs: []*job{j}})
+}
+
+func delAllJobs(r render.Render) {
+	for _, job := range jobs.Getall() {
+		jobs.Remove(job.id)
+	}
+	r.JSON(204, "")
+}
+
+func allJobs(r render.Render) {
+	r.JSON(200, &jobResponse{Jobs: jobs.Getall()})
 }

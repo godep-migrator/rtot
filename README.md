@@ -34,31 +34,73 @@ curl -H 'Rtot-Secret: supersecret' \
   http://other-server.example.com:8457
 ```
 
-which returns the path to the job id:
+which returns the newly-created job, including its id and relative URL:
 
 ``` bash
-{"href":"/1","message":"created job"}
+{
+  "jobs": [
+    {
+      "href": "/0",
+      "id": 0,
+      "out": "",
+      "err": "",
+      "state": "new",
+      "exit": null,
+      "start": "0001-01-01 00:00:00 +0000 UTC",
+      "complete": "0001-01-01 00:00:00 +0000 UTC",
+      "create": "2014-01-12 03:42:32.314152969 +0000 UTC"
+    }
+  ]
+}
 ```
 
 Check back on that job:
 
 ``` bash
 curl -H 'Rtot-Secret: supersecret' \
-  http://other-server.example.com:8457/1
+  http://other-server.example.com:8457/0
 ```
 
 which returns JSON including the job's stdout, stderr, and the exit
 error if any:
 
 ``` javascript
-{"out":"wat is happening\n","err":"","state":"complete","exit":null}
+{
+  "jobs": [
+    {
+      "href": "/0",
+      "id": 0,
+      "out": "wat is happening\n",
+      "err": "",
+      "state": "complete",
+      "exit": null,
+      "start": "2014-01-12 03:42:32.315039718 +0000 UTC",
+      "complete": "2014-01-12 03:42:32.328346325 +0000 UTC",
+      "create": "2014-01-12 03:42:32.314152969 +0000 UTC"
+    }
+  ]
+}
 ```
 
 Jobs that haven't exited yet will return with a state of `"running"` and
 any stdout or stderr that have been collected so far:
 
 ``` javascript
-{"out":"ready\nset\nwait for it\n","err":"","state":"running","exit":null}
+{
+  "jobs": [
+    {
+      "href": "/0",
+      "id": 0,
+      "out": "ready\nset\nwait for it\n",
+      "err": "",
+      "state": "running",
+      "exit": null,
+      "start": "2014-01-12 03:46:38.297295634 +0000 UTC",
+      "complete": "0001-01-01 00:00:00 +0000 UTC",
+      "create": "2014-01-12 03:46:38.296604443 +0000 UTC"
+    }
+  ]
+}
 ```
 
 ## A note on shebangs
