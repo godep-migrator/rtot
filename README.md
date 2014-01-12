@@ -6,6 +6,8 @@ rtot
 - **O**ver
 - **T**here
 
+<q>Arr-tot</q>
+
 Another async remote execution thing because that's just what the world
 needs, right?
 
@@ -71,3 +73,15 @@ curl -H 'Rtot-Secret: supersecret' \
 
 The response for a successful job delete will have a status of 204 and
 no body.
+
+## Death
+
+Since rtot is all about arbitrary superpowers, it's also possible to
+make it exit via the web, which is one way to restart it and/or purge
+all jobs:
+
+```
+curl -H 'Rtot-Secret: supersecret' \
+  -X DELETE \
+  http://other-server.example.com:8457/
+```
