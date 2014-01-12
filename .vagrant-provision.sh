@@ -4,7 +4,15 @@ set -e
 set -x
 
 apt-get update -yq
-apt-get install -yq build-essential curl git mercurial screen byobu nginx bzr
+apt-get install -yq \
+  build-essential \
+  byobu \
+  bzr \
+  curl \
+  git \
+  mercurial \
+  ruby1.9.3 \
+  screen
 
 if ! go env ; then
   curl -s -L https://go.googlecode.com/files/go1.2.linux-amd64.tar.gz | \
