@@ -37,7 +37,7 @@ curl -H 'Rtot-Secret: supersecret' \
 which returns the path to the job id:
 
 ``` bash
-/1
+{"href":"/1","message":"created job"}
 ```
 
 Check back on that job:
@@ -51,14 +51,23 @@ which returns JSON including the job's stdout, stderr, and the exit
 error if any:
 
 ``` javascript
-{"out":"wat is happening\n","err":"","exit":null}
+{"out":"wat is happening\n","err":"","state":"complete","exit":null}
+```
+
+Jobs that haven't exited yet will return with a state of `"running"` and
+any stdout or stderr that have been collected so far:
+
+``` javascript
+{"out":"ready\nset\nwait for it\n","err":"","state":"running","exit":null}
 ```
 
 ## A note on shebangs
 
 If the data POSTed to the server does not start with `#!`, a shebang
 of `#!/bin/bash` is prepended, otherwise it's assumed that the shebang
-provided will be understood by the kernel.
+provided will be understood by the kernel.  The server *does not* try to
+do anything fancy based on the content type of the request, and is sure
+to offend purists.
 
 ## Job cleanup
 
