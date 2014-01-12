@@ -1,31 +1,6 @@
 require_relative 'test_helper'
 
 describe 'rtot server' do
-  include Mtbb::NetThings
-
-  def port
-    @port ||= Mtbb.server(:rtot).port
-  end
-
-  def secret
-    @secret ||= "fizzbuzz#{port}"
-  end
-
-  def post(options = {})
-    request = Net::HTTP::Post.new(
-      options.fetch(:path), 'Rtot-Secret' => secret
-    )
-    request.body = options.fetch(:body)
-    perform_request(request, port)
-  end
-
-  def get(options = {})
-    perform_request(
-      Net::HTTP::Get.new(options.fetch(:path), 'Rtot-Secret' => secret),
-      port
-    )
-  end
-
   it 'is pingable without auth' do
     get_request(path: '/', port: port).code.must_equal('200')
   end
@@ -38,11 +13,11 @@ describe 'rtot server' do
   end
 
   it 'creates jobs' do
-    post(path: '/', body: 'echo foo').code.must_equal('201')
+    post(path: '/', body: 'echo foo')[:res].code.must_equal('201')
   end
 
   it 'returns created job' do
-    response = JSON.parse(post(path: '/', body: 'echo huh').body)
+    response = post(path: '/', body: 'echo huh')[:json]
     response['jobs'].wont_equal([])
     jobs = response['jobs']
     jobs.length.must_equal(1)
@@ -50,7 +25,7 @@ describe 'rtot server' do
   end
 
   it 'requires auth to get jobs' do
-    response = JSON.parse(post(path: '/', body: 'echo hurm').body)
+    response = post(path: '/', body: 'echo hurm')[:json]
     get_request(
       path: response['jobs'].first['href'],
       port: port
@@ -58,8 +33,8 @@ describe 'rtot server' do
   end
 
   it 'returns individual jobs' do
-    response = JSON.parse(post(path: '/', body: 'echo hurm ; sleep 1').body)
-    get(path: response['jobs'].first['href']).code.must_equal('202')
+    response = post(path: '/', body: 'echo hurm ; sleep 1')[:json]
+    get(path: response['jobs'].first['href'])[:res].code.must_equal('202')
   end
 
   it 'requires auth to get all jobs' do
@@ -69,7 +44,20 @@ describe 'rtot server' do
 
   it 'returns all jobs' do
     2.times { |n| post(path: '/', body: "echo #{n} time") }
-    response = JSON.parse(get(path: '/all').body)
-    response['jobs'].length.must_be(:>, 1)
+    get(path: '/all')[:json]['jobs'].length.must_be(:>, 1)
+  end
+
+  it 'includes the exit as a string' do
+    job = post(path: '/', body: 'exit 1')[:json]['jobs'].first
+    sleep 0.1
+    exit_str = get(path: job['href'])[:json]['jobs'].first['exit']
+    exit_str.must_equal('exit status 1')
+  end
+
+  it 'includes an empty string when exit code is 0' do
+    job = post(path: '/', body: 'exit 0')[:json]['jobs'].first
+    sleep 0.1
+    exit_str = get(path: job['href'])[:json]['jobs'].first['exit']
+    exit_str.must_equal('')
   end
 end
