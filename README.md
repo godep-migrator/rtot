@@ -131,7 +131,7 @@ Since rtot is all about arbitrary superpowers, it's also possible to
 make it exit via the web, which is one way to restart it and/or purge
 all jobs:
 
-```
+``` bash
 curl -H 'Rtot-Secret: supersecret' \
   -X DELETE \
   http://other-server.example.com:8457/
