@@ -1,16 +1,14 @@
 package rtot
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/codegangsta/martini"
 	"github.com/codegangsta/martini-contrib/render"
@@ -25,7 +23,7 @@ var (
 		"message": "phooey!",
 	}
 	noSuchJob        = &map[string]string{"error": "no such job"}
-	defaultJobFields = "out,err,create,start,complete"
+	defaultJobFields = "out,err,create,start,complete,filename"
 )
 
 // ServerMain is the entry point for the server executable
@@ -126,56 +124,17 @@ func createJob(r render.Render, req *http.Request) {
 		return
 	}
 
-	body := string(bodyBytes)
-
-	f, err := ioutil.TempFile("", "rtot")
+	j, err := newJob(string(bodyBytes))
 	if err != nil {
 		send500(r, err)
 		return
 	}
 
-	if !strings.HasPrefix(body, "#!") {
-		body = "#!/bin/bash\n" + body
-	}
-
-	_, err = f.WriteString(body)
-	if err != nil {
-		send500(r, err)
-		return
-	}
-
-	err = f.Chmod(0755)
-
-	var (
-		outbuf bytes.Buffer
-		errbuf bytes.Buffer
-	)
-
-	fname := f.Name()
-	f.Close()
-
-	cmd := exec.Command(fname)
-	cmd.Stdout = &outbuf
-	cmd.Stderr = &errbuf
-
-	j := &job{
-		cmd:        cmd,
-		state:      "new",
-		outBuf:     &outbuf,
-		errBuf:     &errbuf,
-		createTime: time.Now().UTC(),
-	}
 	jobs.Add(j)
-
-	go func(j *job, fname string) {
-		j.state = "running"
-		j.startTime = time.Now().UTC()
-		j.exit = cmd.Run()
-		j.state = "complete"
-		j.completeTime = time.Now().UTC()
-
-		os.Remove(fname)
-	}(j, fname)
+	go func() {
+		j.Run()
+		runtime.Goexit()
+	}()
 
 	r.JSON(201, newJobResponse([]*job{j}, fieldsMapFromRequest(req)))
 }

@@ -72,5 +72,9 @@ func (g *jobGroup) Getall(state string) []*job {
 }
 
 func (g *jobGroup) Remove(i int) bool {
+	job := g.store.Get(i)
+	if job != nil {
+		job.Cleanup()
+	}
 	return g.store.Remove(i)
 }
