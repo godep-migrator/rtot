@@ -24,7 +24,8 @@ var (
 		"error":   "not authorized",
 		"message": "phooey!",
 	}
-	noSuchJob = &map[string]string{"error": "no such job"}
+	noSuchJob        = &map[string]string{"error": "no such job"}
+	defaultJobFields = "out,err,create,start,complete"
 )
 
 // ServerMain is the entry point for the server executable
@@ -97,18 +98,20 @@ func getJob(r render.Render, req *http.Request, params martini.Params) {
 		return
 	}
 
+	fields := fieldsMapFromRequest(req)
+
 	j := jobs.Get(i)
 	if j == nil {
-		r.JSON(404, &jobResponse{Jobs: []*job{}})
+		r.JSON(404, newJobResponse([]*job{}, fields))
 		return
 	}
 
 	if j.state != "complete" {
-		r.JSON(202, &jobResponse{Jobs: []*job{j}})
+		r.JSON(202, newJobResponse([]*job{j}, fields))
 		return
 	}
 
-	r.JSON(200, &jobResponse{Jobs: []*job{j}})
+	r.JSON(200, newJobResponse([]*job{j}, fields))
 }
 
 func createJob(r render.Render, req *http.Request) {
@@ -174,7 +177,7 @@ func createJob(r render.Render, req *http.Request) {
 		os.Remove(fname)
 	}(j, fname)
 
-	r.JSON(201, &jobResponse{Jobs: []*job{j}})
+	r.JSON(201, newJobResponse([]*job{j}, fieldsMapFromRequest(req)))
 }
 
 func delAllJobs(r render.Render, params martini.Params) {
@@ -183,30 +186,24 @@ func delAllJobs(r render.Render, params martini.Params) {
 		return
 	}
 
-	state, ok := params["state"]
-	if !ok {
-		state = ""
-	}
+	p := *defaultedParams(params)
 
-	for _, job := range jobs.Getall(state) {
+	for _, job := range jobs.Getall(p["state"]) {
 		jobs.Kill(job.id)
 		jobs.Remove(job.id)
 	}
 	r.JSON(204, "")
 }
 
-func allJobs(r render.Render, params martini.Params) {
+func allJobs(r render.Render, params martini.Params, req *http.Request) {
 	jobs, ok := getMainJobGroupOr500(r)
 	if !ok {
 		return
 	}
 
-	state, ok := params["state"]
-	if !ok {
-		state = ""
-	}
-
-	r.JSON(200, &jobResponse{Jobs: jobs.Getall(state)})
+	p := *defaultedParams(params)
+	r.JSON(200, newJobResponse(jobs.Getall(p["state"]),
+		fieldsMapFromRequest(req)))
 }
 
 func send500(r render.Render, err error) {
@@ -233,4 +230,31 @@ func getMainJobGroupOr500(r render.Render) (*jobGroup, bool) {
 		return nil, false
 	}
 	return jobs, true
+}
+
+func fieldsMapFromRequest(req *http.Request) *map[string]int {
+	fieldsSlice, ok := req.URL.Query()["fields"]
+	if !ok {
+		fieldsSlice = []string{defaultJobFields}
+	}
+	return fieldsMapFromString(fieldsSlice[0])
+}
+
+func fieldsMapFromString(f string) *map[string]int {
+	fields := &map[string]int{}
+	for _, part := range strings.Split(f, ",") {
+		(*fields)[part] = 1
+	}
+	return fields
+}
+
+func defaultedParams(params martini.Params) *map[string]string {
+	state, ok := params["state"]
+	if !ok {
+		state = ""
+	}
+
+	return &map[string]string{
+		"state": state,
+	}
 }

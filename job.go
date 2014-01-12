@@ -2,7 +2,6 @@ package rtot
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"time"
@@ -20,34 +19,61 @@ type job struct {
 	exit         error
 }
 
+func (j *job) toJSON(fields *map[string]int) *jobJSON {
+	fieldsMap := *fields
+
+	exitString := ""
+	outStr := ""
+	errStr := ""
+	startString := ""
+	completeString := ""
+	createString := ""
+
+	if j.exit != nil {
+		exitString = j.exit.Error()
+	}
+
+	if _, ok := fieldsMap["out"]; ok {
+		outStr = string(j.outBuf.Bytes())
+	}
+
+	if _, ok := fieldsMap["err"]; ok {
+		errStr = string(j.errBuf.Bytes())
+	}
+
+	if _, ok := fieldsMap["create"]; ok {
+		createString = j.createTime.String()
+	}
+
+	if _, ok := fieldsMap["start"]; ok {
+		startString = j.startTime.String()
+	}
+
+	if _, ok := fieldsMap["complete"]; ok {
+		completeString = j.completeTime.String()
+	}
+
+	return &jobJSON{
+		ID:       j.id,
+		Out:      outStr,
+		Err:      errStr,
+		State:    j.state,
+		Exit:     exitString,
+		Start:    startString,
+		Complete: completeString,
+		Create:   createString,
+		Href:     fmt.Sprintf("/%v", j.id),
+	}
+}
+
 type jobJSON struct {
 	ID       int    `json:"id"`
 	Out      string `json:"out,omitempty"`
 	Err      string `json:"err,omitempty"`
 	State    string `json:"state"`
 	Exit     string `json:"exit,omitempty"`
-	Start    string `json:"start"`
-	Complete string `json:"complete"`
-	Create   string `json:"create"`
+	Start    string `json:"start,omitempty"`
+	Complete string `json:"complete,omitempty"`
+	Create   string `json:"create,omitempty"`
 	Href     string `json:"href"`
-}
-
-func (j *job) MarshalJSON() ([]byte, error) {
-	exitString := ""
-	if j.exit == nil {
-		exitString = ""
-	} else {
-		exitString = j.exit.Error()
-	}
-	return json.Marshal(&jobJSON{
-		ID:       j.id,
-		Out:      string(j.outBuf.Bytes()),
-		Err:      string(j.errBuf.Bytes()),
-		State:    j.state,
-		Exit:     exitString,
-		Start:    j.startTime.String(),
-		Complete: j.completeTime.String(),
-		Create:   j.createTime.String(),
-		Href:     fmt.Sprintf("/%v", j.id),
-	})
 }

@@ -90,4 +90,10 @@ describe 'rtot server' do
     sleep 0.1
     get(path: job['href'])[:json]['jobs'].first.wont_include('out')
   end
+
+  it 'only sends "id", "state", and "href" when "?fields="' do
+    job = post(path: '/', body: 'exit 0')[:json]['jobs'].first
+    keys = get(path: "#{job['href']}?fields=")[:json]['jobs'].first.keys.sort
+	keys.must_equal(%w(href id state))
+  end
 end
