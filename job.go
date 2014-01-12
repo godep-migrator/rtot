@@ -22,10 +22,10 @@ type job struct {
 
 type jobJSON struct {
 	ID       int    `json:"id"`
-	Out      string `json:"out"`
-	Err      string `json:"err"`
+	Out      string `json:"out,omitempty"`
+	Err      string `json:"err,omitempty"`
 	State    string `json:"state"`
-	Exit     string `json:"exit"`
+	Exit     string `json:"exit,omitempty"`
 	Start    string `json:"start"`
 	Complete string `json:"complete"`
 	Create   string `json:"create"`

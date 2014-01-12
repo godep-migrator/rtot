@@ -66,17 +66,28 @@ describe 'rtot server' do
     get(path: '/all')[:json]['jobs'].length.must_equal(1)
   end
 
-  it 'includes the exit as a string' do
+  it 'includes "exit" as a string' do
     job = post(path: '/', body: 'exit 1')[:json]['jobs'].first
     sleep 0.1
     exit_str = get(path: job['href'])[:json]['jobs'].first['exit']
     exit_str.must_equal('exit status 1')
   end
 
-  it 'includes an empty string when exit code is 0' do
+  it 'omits "exit" when exit code is 0' do
     job = post(path: '/', body: 'exit 0')[:json]['jobs'].first
     sleep 0.1
-    exit_str = get(path: job['href'])[:json]['jobs'].first['exit']
-    exit_str.must_equal('')
+    get(path: job['href'])[:json]['jobs'].first.wont_include('exit')
+  end
+
+  it 'omits "err" when empty' do
+    job = post(path: '/', body: 'exit 0')[:json]['jobs'].first
+    sleep 0.1
+    get(path: job['href'])[:json]['jobs'].first.wont_include('err')
+  end
+
+  it 'omits "out" when empty' do
+    job = post(path: '/', body: 'exit 0')[:json]['jobs'].first
+    sleep 0.1
+    get(path: job['href'])[:json]['jobs'].first.wont_include('out')
   end
 end
