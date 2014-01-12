@@ -1,15 +1,12 @@
 rtot
 ====
 
-- **R**un
-- **T**his
-- **O**ver
-- **T**here
-
-<q>Arr-tot</q>
+**R**un **T**his **O**ver **T**here (<q>Arr-tot</q>)
 
 Another async remote execution thing because that's just what the world
 needs, right?
+
+[![Build Status](https://travis-ci.org/modcloth-labs/rtot.png?branch=master)](https://travis-ci.org/modcloth-labs/rtot)
 
 ## No really
 
