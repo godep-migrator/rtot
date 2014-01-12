@@ -45,7 +45,7 @@ which returns the newly-created job, including its id and relative URL:
       "out": "",
       "err": "",
       "state": "new",
-      "exit": null,
+      "exit": "",
       "start": "0001-01-01 00:00:00 +0000 UTC",
       "complete": "0001-01-01 00:00:00 +0000 UTC",
       "create": "2014-01-12 03:42:32.314152969 +0000 UTC"
@@ -73,7 +73,7 @@ error if any:
       "out": "wat is happening\n",
       "err": "",
       "state": "complete",
-      "exit": null,
+      "exit": "",
       "start": "2014-01-12 03:42:32.315039718 +0000 UTC",
       "complete": "2014-01-12 03:42:32.328346325 +0000 UTC",
       "create": "2014-01-12 03:42:32.314152969 +0000 UTC"
@@ -94,7 +94,7 @@ any stdout or stderr that have been collected so far:
       "out": "ready\nset\nwait for it\n",
       "err": "",
       "state": "running",
-      "exit": null,
+      "exit": "",
       "start": "2014-01-12 03:46:38.297295634 +0000 UTC",
       "complete": "0001-01-01 00:00:00 +0000 UTC",
       "create": "2014-01-12 03:46:38.296604443 +0000 UTC"
