@@ -22,17 +22,22 @@ all: clean test save
 test: build fmtpolice
 	$(GO) test -i $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(TARGETS)
 	$(GO) test -race $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(TARGETS)
+	./mtbb
 
 build: deps
 	$(GO) install -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
 
-deps:
+deps: mtbb
 	if [ ! -e $${GOPATH%%:*}/src/$(RTOT_PACKAGE) ] ; then \
 		mkdir -p $${GOPATH%%:*}/src/github.com/modcloth-labs ; \
 		ln -sv $(PWD) $${GOPATH%%:*}/src/$(RTOT_PACKAGE) ; \
 	fi
 	$(GO) get -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
 	$(GODEP) restore
+
+mtbb:
+	curl -s -o mtbb https://raw.github.com/modcloth-labs/mtbb/master/lib/mtbb.rb
+	chmod +x mtbb
 
 clean:
 	$(GO) clean -x $(TARGETS) || true
