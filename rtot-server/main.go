@@ -50,5 +50,12 @@ func main() {
 		secret = makeSecret()
 		fmt.Printf("[rtot] No secret given, so generated %q\n", secret)
 	}
+
+	_, err := rtot.NewJobGroup("main", "memory")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[rtot] Failed to init job store: %v\n", err)
+		os.Exit(1)
+	}
+
 	rtot.ServerMain(addr, secret)
 }

@@ -66,10 +66,12 @@ func die(r render.Render, req *http.Request) {
 func delJob(r render.Render, req *http.Request, params martini.Params) {
 	i, err := strconv.Atoi(params["i"])
 	if err != nil {
-		r.JSON(400, map[string]string{
-			"error":   "invalid job number",
-			"message": fmt.Sprintf("what is %q?", params["i"]),
-		})
+		sendInvalidJob400(r, params["i"])
+		return
+	}
+
+	jobs, ok := getMainJobGroupOr500(r)
+	if !ok {
 		return
 	}
 
@@ -84,10 +86,12 @@ func delJob(r render.Render, req *http.Request, params martini.Params) {
 func getJob(r render.Render, req *http.Request, params martini.Params) {
 	i, err := strconv.Atoi(params["i"])
 	if err != nil {
-		r.JSON(400, map[string]string{
-			"error":   "invalid job number",
-			"message": fmt.Sprintf("what is %q?", params["i"]),
-		})
+		sendInvalidJob400(r, params["i"])
+		return
+	}
+
+	jobs, ok := getMainJobGroupOr500(r)
+	if !ok {
 		return
 	}
 
@@ -108,9 +112,12 @@ func getJob(r render.Render, req *http.Request, params martini.Params) {
 func createJob(r render.Render, req *http.Request) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		r.JSON(400, map[string]string{
-			"error": fmt.Sprintf("nope. %v", err),
-		})
+		send500(r, err)
+		return
+	}
+
+	jobs, ok := getMainJobGroupOr500(r)
+	if !ok {
 		return
 	}
 
@@ -118,9 +125,7 @@ func createJob(r render.Render, req *http.Request) {
 
 	f, err := ioutil.TempFile("", "rtot")
 	if err != nil {
-		r.JSON(500, map[string]string{
-			"error": fmt.Sprintf("nope. %v", err),
-		})
+		send500(r, err)
 		return
 	}
 
@@ -130,9 +135,7 @@ func createJob(r render.Render, req *http.Request) {
 
 	_, err = f.WriteString(body)
 	if err != nil {
-		r.JSON(500, map[string]string{
-			"error": fmt.Sprintf("nope. %v", err),
-		})
+		send500(r, err)
 		return
 	}
 
@@ -159,7 +162,7 @@ func createJob(r render.Render, req *http.Request) {
 	}
 	jobs.Add(j)
 
-	go func() {
+	go func(j *job, fname string) {
 		j.state = "running"
 		j.startTime = time.Now().UTC()
 		j.exit = cmd.Run()
@@ -167,12 +170,17 @@ func createJob(r render.Render, req *http.Request) {
 		j.completeTime = time.Now().UTC()
 
 		os.Remove(fname)
-	}()
+	}(j, fname)
 
 	r.JSON(201, &jobResponse{Jobs: []*job{j}})
 }
 
 func delAllJobs(r render.Render) {
+	jobs, ok := getMainJobGroupOr500(r)
+	if !ok {
+		return
+	}
+
 	for _, job := range jobs.Getall() {
 		jobs.Remove(job.id)
 	}
@@ -180,5 +188,36 @@ func delAllJobs(r render.Render) {
 }
 
 func allJobs(r render.Render) {
+	jobs, ok := getMainJobGroupOr500(r)
+	if !ok {
+		return
+	}
+
 	r.JSON(200, &jobResponse{Jobs: jobs.Getall()})
+}
+
+func send500(r render.Render, err error) {
+	r.JSON(500, map[string]string{
+		"error": fmt.Sprintf("nope. %v", err),
+	})
+	return
+}
+
+func sendInvalidJob400(r render.Render, i string) {
+	r.JSON(400, map[string]string{
+		"error":   "invalid job number",
+		"message": fmt.Sprintf("what is %q?", i),
+	})
+	return
+}
+
+func getMainJobGroupOr500(r render.Render) (*jobGroup, bool) {
+	jobs := GetJobGroup("main")
+	if jobs == nil {
+		r.JSON(500, map[string]string{
+			"error": "missing main job group",
+		})
+		return nil, false
+	}
+	return jobs, true
 }

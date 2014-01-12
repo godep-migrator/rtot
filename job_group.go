@@ -1,74 +1,67 @@
 package rtot
 
 import (
+	"fmt"
 	"sync"
 )
 
 var (
-	jobs = newJobGroup()
+	jobGroups      = map[string]*jobGroup{}
+	jobGroupsMutex sync.Mutex
 )
 
 type jobGroup struct {
-	sync.Mutex
 	cur   int
-	group map[int]*job
+	store jobGroupStore
 }
 
-func newJobGroup() *jobGroup {
-	return &jobGroup{
-		group: map[int]*job{},
+// GetJobGroup is how you get a job group, assuming it exists
+func GetJobGroup(name string) *jobGroup {
+	jobGroupsMutex.Lock()
+	defer jobGroupsMutex.Unlock()
+
+	g, ok := jobGroups[name]
+	if !ok {
+		return nil
+	}
+
+	return g
+}
+
+// NewJobGroup is used to initialize members of the jobGroups var
+func NewJobGroup(name, storeType string) (*jobGroup, error) {
+	var store jobGroupStore
+	switch storeType {
+	case "memory":
+		store = newMemoryJobGroupStore()
+	default:
+		return nil, fmt.Errorf("invalid storeType %v", storeType)
+	}
+	jobGroupsMutex.Lock()
+	defer jobGroupsMutex.Unlock()
+	jobGroups[name] = &jobGroup{
+		store: store,
 		cur:   0,
 	}
+	return jobGroups[name], nil
 }
 
 func (g *jobGroup) Add(j *job) int {
-	g.Lock()
-	defer g.Unlock()
-
 	i := g.cur
 	j.id = i
-	g.group[g.cur] = j
+	g.store.Add(j)
 	g.cur += 1
 	return i
 }
 
 func (g *jobGroup) Get(i int) *job {
-	g.Lock()
-	defer g.Unlock()
-
-	j, ok := g.group[i]
-	if !ok {
-		return nil
-	}
-
-	return j
+	return g.store.Get(i)
 }
 
 func (g *jobGroup) Getall() []*job {
-	g.Lock()
-	defer g.Unlock()
-
-	ret := []*job{}
-	for _, job := range g.group {
-		ret = append(ret, job)
-	}
-
-	return ret
+	return g.store.Getall()
 }
 
 func (g *jobGroup) Remove(i int) bool {
-	g.Lock()
-	defer g.Unlock()
-
-	_, ok := g.group[i]
-	if !ok {
-		return false
-	}
-
-	delete(g.group, i)
-	return true
-}
-
-func (g *jobGroup) MarshalJSON() ([]byte, error) {
-	return []byte("{}"), nil
+	return g.store.Remove(i)
 }
