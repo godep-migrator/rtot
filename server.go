@@ -50,7 +50,8 @@ func ServerMain(addr, secret string) {
 	app.Delete("/:i", delJob)
 
 	logger.Printf("Serving at %s\n", addr)
-	http.ListenAndServe(addr, app)
+	http.Handle("/", app)
+	http.ListenAndServe(addr, nil)
 }
 
 func root(r render.Render) {
