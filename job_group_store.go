@@ -3,6 +3,6 @@ package rtot
 type jobGroupStore interface {
 	Add(*job) int
 	Get(int) *job
-	Getall() []*job
+	Getall(string) []*job
 	Remove(int) bool
 }

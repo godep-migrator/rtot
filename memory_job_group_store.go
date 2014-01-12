@@ -35,13 +35,15 @@ func (m *memoryJobGroupStore) Get(i int) *job {
 	return j
 }
 
-func (m *memoryJobGroupStore) Getall() []*job {
+func (m *memoryJobGroupStore) Getall(state string) []*job {
 	m.Lock()
 	defer m.Unlock()
 
 	ret := []*job{}
 	for _, job := range m.group {
-		ret = append(ret, job)
+		if state == "" || job.state == state {
+			ret = append(ret, job)
+		}
 	}
 
 	return ret

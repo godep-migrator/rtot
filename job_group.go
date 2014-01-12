@@ -8,6 +8,7 @@ import (
 var (
 	jobGroups      = map[string]*jobGroup{}
 	jobGroupsMutex sync.Mutex
+	errNoSuchJob   = fmt.Errorf("no such job")
 )
 
 type jobGroup struct {
@@ -58,8 +59,16 @@ func (g *jobGroup) Get(i int) *job {
 	return g.store.Get(i)
 }
 
-func (g *jobGroup) Getall() []*job {
-	return g.store.Getall()
+func (g *jobGroup) Kill(i int) error {
+	job := g.store.Get(i)
+	if job != nil {
+		return job.cmd.Process.Kill()
+	}
+	return errNoSuchJob
+}
+
+func (g *jobGroup) Getall(state string) []*job {
+	return g.store.Getall(state)
 }
 
 func (g *jobGroup) Remove(i int) bool {

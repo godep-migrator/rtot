@@ -28,3 +28,11 @@ def get(options = {})
   )
   { res: response, json: JSON.parse(response.body) }
 end
+
+def delete(options = {})
+  response = perform_request(
+    Net::HTTP::Delete.new(options.fetch(:path), 'Rtot-Secret' => secret),
+    port
+  )
+  { res: response, json: '' }
+end

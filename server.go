@@ -45,8 +45,10 @@ func ServerMain(addr, secret string) {
 	app.Delete("/", die)
 	app.Post("/", createJob)
 	app.Get("/all", allJobs)
+	app.Get("/all/:state", allJobs)
 	app.Get("/:i", getJob)
 	app.Delete("/all", delAllJobs)
+	app.Delete("/all/:state", delAllJobs)
 	app.Delete("/:i", delJob)
 
 	logger.Printf("Serving at %s\n", addr)
@@ -175,25 +177,36 @@ func createJob(r render.Render, req *http.Request) {
 	r.JSON(201, &jobResponse{Jobs: []*job{j}})
 }
 
-func delAllJobs(r render.Render) {
+func delAllJobs(r render.Render, params martini.Params) {
 	jobs, ok := getMainJobGroupOr500(r)
 	if !ok {
 		return
 	}
 
-	for _, job := range jobs.Getall() {
+	state, ok := params["state"]
+	if !ok {
+		state = ""
+	}
+
+	for _, job := range jobs.Getall(state) {
+		jobs.Kill(job.id)
 		jobs.Remove(job.id)
 	}
 	r.JSON(204, "")
 }
 
-func allJobs(r render.Render) {
+func allJobs(r render.Render, params martini.Params) {
 	jobs, ok := getMainJobGroupOr500(r)
 	if !ok {
 		return
 	}
 
-	r.JSON(200, &jobResponse{Jobs: jobs.Getall()})
+	state, ok := params["state"]
+	if !ok {
+		state = ""
+	}
+
+	r.JSON(200, &jobResponse{Jobs: jobs.Getall(state)})
 }
 
 func send500(r render.Render, err error) {

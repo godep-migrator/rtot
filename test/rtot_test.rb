@@ -1,6 +1,10 @@
 require_relative 'test_helper'
 
 describe 'rtot server' do
+  before do
+    delete(path: '/all')
+  end
+
   it 'is pingable without auth' do
     get_request(path: '/', port: port).code.must_equal('200')
   end
@@ -45,6 +49,21 @@ describe 'rtot server' do
   it 'returns all jobs' do
     2.times { |n| post(path: '/', body: "echo #{n} time") }
     get(path: '/all')[:json]['jobs'].length.must_be(:>, 1)
+  end
+
+  it 'allows for getting all by state' do
+    post(path: '/', body: 'echo fast-ish')
+    post(path: '/', body: 'echo slowwwww ; sleep 5')
+    sleep 0.1
+    get(path: '/all/running')[:json]['jobs'].length.must_equal(1)
+  end
+
+  it 'allows for deleting by state' do
+    post(path: '/', body: 'echo fast-ish')
+    post(path: '/', body: 'echo slowwwww ; sleep 5')
+    sleep 0.1
+    delete(path: '/all/complete')
+    get(path: '/all')[:json]['jobs'].length.must_equal(1)
   end
 
   it 'includes the exit as a string' do
