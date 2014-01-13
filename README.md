@@ -28,7 +28,7 @@ Hit the server over HTTP:
 ``` bash
 curl -H 'Rtot-Secret: supersecret' \
   -d 'echo wat is happening' \
-  http://other-server.example.com:8457
+  http://other-server.example.com:8457/jobs
 ```
 
 which returns the newly-created job, including its id and relative URL:
@@ -37,7 +37,7 @@ which returns the newly-created job, including its id and relative URL:
 {
   "jobs": [
     {
-      "href": "/0",
+      "href": "/jobs/0",
       "id": 0,
       "state": "new",
       "start": "0001-01-01 00:00:00 +0000 UTC",
@@ -52,7 +52,7 @@ Check back on that job:
 
 ``` bash
 curl -H 'Rtot-Secret: supersecret' \
-  http://other-server.example.com:8457/0
+  http://other-server.example.com:8457/jobs/0
 ```
 
 which returns JSON including the job's stdout, stderr, and the exit
@@ -62,7 +62,7 @@ error if any:
 {
   "jobs": [
     {
-      "href": "/0",
+      "href": "/jobs/0",
       "id": 0,
       "out": "wat is happening\n",
       "state": "complete",
@@ -81,7 +81,7 @@ any stdout or stderr that have been collected so far:
 {
   "jobs": [
     {
-      "href": "/0",
+      "href": "/jobs/0",
       "id": 0,
       "out": "ready\nset\nwait for it\n",
       "state": "running",
@@ -109,7 +109,7 @@ Instead, it's up to you to clean up after yourself:
 ``` bash
 curl -H 'Rtot-Secret: supersecret' \
   -X DELETE \
-  http://other-server.example.com:8457/1
+  http://other-server.example.com:8457/jobs/1
 ```
 
 The response for a successful job delete will have a status of 204 and

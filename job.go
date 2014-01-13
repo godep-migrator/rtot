@@ -88,6 +88,10 @@ func (j *job) Cleanup() {
 	os.Remove(j.filename)
 }
 
+func (j *job) Href() string {
+	return fmt.Sprintf("/jobs/%v", j.id)
+}
+
 func (j *job) toJSON(fields *map[string]int) *jobJSON {
 	fieldsMap := *fields
 
@@ -137,7 +141,7 @@ func (j *job) toJSON(fields *map[string]int) *jobJSON {
 		Complete: completeString,
 		Create:   createString,
 		Filename: filenameString,
-		Href:     fmt.Sprintf("/%v", j.id),
+		Href:     j.Href(),
 	}
 }
 
