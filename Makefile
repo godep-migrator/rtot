@@ -19,10 +19,18 @@ RTOT_HTTPADDR ?= :8457
 
 all: clean test save
 
-test: build fmtpolice
-	$(GO) test -i $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(TARGETS)
-	$(GO) test -race $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(TARGETS)
+test: build fmtpolice testdeps coverage.html
 	./mtbb -v
+
+coverage.html: coverage.out
+	$(GO) tool cover -html=$^ -o $@
+
+coverage.out:
+	$(GO) test -covermode=count -coverprofile=$@ $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(RTOT_PACKAGE)
+	$(GO) tool cover -func=$@
+
+testdeps:
+	$(GO) test -i $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(TARGETS)
 
 build: deps
 	$(GO) install -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
@@ -40,6 +48,7 @@ mtbb:
 	chmod +x mtbb
 
 clean:
+	rm -vf coverage.html coverage.out
 	$(GO) clean -x $(TARGETS) || true
 	if [ -d $${GOPATH%%:*}/pkg ] ; then \
 		find $${GOPATH%%:*}/pkg -name '*rtot*' -exec rm -v {} \; ; \
