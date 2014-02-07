@@ -1,3 +1,5 @@
 /.vagrant/
 /.mtbb-artifacts/
 /mtbb
+/coverage.html
+/coverage.out

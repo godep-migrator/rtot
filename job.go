@@ -83,9 +83,11 @@ func (j *job) Run() {
 	j.completeTime = time.Now().UTC()
 }
 
-func (j *job) Cleanup() {
-	j.cmd.Process.Release()
-	os.Remove(j.filename)
+func (j *job) Cleanup() error {
+	if j.cmd.Process != nil {
+		j.cmd.Process.Release()
+	}
+	return os.Remove(j.filename)
 }
 
 func (j *job) Href() string {
