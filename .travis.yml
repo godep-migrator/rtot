@@ -8,6 +8,7 @@ env:
   - PATH=$HOME/gopath/bin:$PATH
 before_install:
 - go get -x github.com/kr/godep
+- go get -x code.google.com/p/go.tools/cmd/cover
 - rvm use 2.0.0 --install --binary --fuzzy
 - ruby --version
 - rvm --version
