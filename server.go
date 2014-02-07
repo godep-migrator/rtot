@@ -101,9 +101,21 @@ func ServerMain(c *serverContext) int {
 		os.Exit(1)
 	}
 
-	app := martini.Classic()
-	app.Use(render.Renderer())
-	app.Use(func(res http.ResponseWriter, req *http.Request) {
+	m := NewServer(c)
+
+	c.logger.Printf("Serving at %s\n", c.addr)
+	http.Handle("/", m)
+	if !c.noop {
+		http.ListenAndServe(c.addr, nil)
+	}
+	return 0
+}
+
+// NewServer creates a martini.ClassicMartini based on server context
+func NewServer(c *serverContext) *martini.ClassicMartini {
+	m := martini.Classic()
+	m.Use(render.Renderer())
+	m.Use(func(res http.ResponseWriter, req *http.Request) {
 		if req.URL.Path == "/ping" && req.Method == "GET" {
 			return
 		}
@@ -112,28 +124,23 @@ func ServerMain(c *serverContext) int {
 			http.Error(res, "Not Authorized", http.StatusUnauthorized)
 		}
 	})
-	app.Use(func(res http.ResponseWriter) {
+	m.Use(func(res http.ResponseWriter) {
 		res.Header().Set("Rtot-Version", VersionString)
 	})
-	app.Map(c)
+	m.Map(c)
 
-	app.Get("/", root)
-	app.Delete("/", die)
+	m.Get("/", root)
+	m.Delete("/", die)
 
-	app.Get("/ping", ping)
+	m.Get("/ping", ping)
 
-	app.Post("/jobs", createJob)
-	app.Get("/jobs", allJobs)
-	app.Get("/jobs/:id", getJob)
-	app.Delete("/jobs", delAllJobs)
-	app.Delete("/jobs/:id", delJob)
+	m.Post("/jobs", createJob)
+	m.Get("/jobs", allJobs)
+	m.Get("/jobs/:id", getJob)
+	m.Delete("/jobs", delAllJobs)
+	m.Delete("/jobs/:id", delJob)
 
-	c.logger.Printf("Serving at %s\n", c.addr)
-	http.Handle("/", app)
-	if !c.noop {
-		http.ListenAndServe(c.addr, nil)
-	}
-	return 0
+	return m
 }
 
 func root(r render.Render, c *serverContext) {
@@ -147,8 +154,10 @@ func ping(r render.Render, c *serverContext) {
 	})
 }
 
-func die(r render.Render, req *http.Request) {
-	go os.Exit(1)
+func die(r render.Render, req *http.Request, c *serverContext) {
+	if !c.noop {
+		go os.Exit(1)
+	}
 	r.JSON(204, "")
 }
 
@@ -223,22 +232,26 @@ func createJob(r render.Render, req *http.Request, c *serverContext) {
 	}
 
 	jobs.Add(j)
-	go func() {
-		j.Run()
-		runtime.Goexit()
-	}()
+	if !c.noop {
+		go func() {
+			j.Run()
+			runtime.Goexit()
+		}()
+	}
 
 	r.JSON(201, newJobResponse([]*job{j}, fieldsMapFromRequest(req, c)))
 }
 
-func delAllJobs(r render.Render, req *http.Request) {
+func delAllJobs(r render.Render, req *http.Request, c *serverContext) {
 	jobs, ok := getMainJobGroupOr500(r)
 	if !ok {
 		return
 	}
 
 	for _, job := range jobs.Getall(req.URL.Query().Get("state")) {
-		jobs.Kill(job.id)
+		if !c.noop {
+			jobs.Kill(job.id)
+		}
 		jobs.Remove(job.id)
 	}
 
