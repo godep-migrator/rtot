@@ -9,7 +9,7 @@ env:
 before_install:
 - go get -x github.com/kr/godep
 - go get -x code.google.com/p/go.tools/cmd/cover
-- rvm use 2.0.0 --install --binary --fuzzy
+- rvm use 2.0.0 --install --fuzzy --create
 - ruby --version
 - rvm --version
 - gem --version
