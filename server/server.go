@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"runtime"
@@ -15,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 )
@@ -26,14 +26,14 @@ var (
 	}
 	defaultRootMap = &map[string]*map[string]string{
 		"links": &map[string]string{
-			"jobs":      "/jobs{?state}",
-			"jobs.byID": "/jobs/{jobs.id}",
-			"ping":      "/ping",
+			"jobs":       "/jobs{?state}",
+			"jobs.by_id": "/jobs/{jobs.id}",
+			"ping":       "/ping",
 		},
 	}
 	defaultNoSuchJob     = &map[string]string{"error": "no such job"}
 	defaultServerContext = &serverContext{
-		logger:           log.New(os.Stdout, "[rtot] ", log.LstdFlags|log.Lshortfile),
+		logger:           logrus.New(),
 		theBeginning:     time.Now(),
 		defaultJobFields: "out,err,create,start,complete,filename",
 
@@ -51,7 +51,7 @@ var (
 )
 
 type serverContext struct {
-	logger           *log.Logger
+	logger           *logrus.Logger
 	theBeginning     time.Time
 	defaultJobFields string
 	addr             string
@@ -77,6 +77,14 @@ func ServerMain(c *serverContext) int {
 		c.addr = ":8457"
 	}
 
+	logFmt := os.Getenv("RTOT_LOG_FORMAT")
+	if logFmt == "" {
+		logFmt = "text"
+	}
+
+	c.fl.StringVar(&logFmt,
+		"f", logFmt,
+		"Log output format (text, json) [RTOT_LOG_FORMAT]")
 	c.fl.StringVar(&c.addr,
 		"a", c.addr, "HTTP Server address [RTOT_ADDR]")
 	c.fl.StringVar(&c.secret,
@@ -85,6 +93,10 @@ func ServerMain(c *serverContext) int {
 
 	c.fl.Parse(c.args)
 
+	if logFmt == "json" {
+		c.logger.Formatter = &logrus.JSONFormatter{}
+	}
+
 	if *versionFlag {
 		fmt.Printf("rtot %v\n", VersionString)
 		os.Exit(0)
@@ -92,18 +104,18 @@ func ServerMain(c *serverContext) int {
 
 	if c.secret == "" {
 		c.secret = makeSecret()
-		fmt.Printf("[rtot] No secret given, so generated %q\n", c.secret)
+		c.logger.WithField("secret", c.secret).Info("No secret given, so generated one.")
 	}
 
 	_, err := NewJobGroup("main", "memory")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[rtot] Failed to init job store: %v\n", err)
+		c.logger.WithField("err", err).Warn("Failed to init job store")
 		os.Exit(1)
 	}
 
 	m := NewServer(c)
 
-	c.logger.Printf("Serving at %s\n", c.addr)
+	c.logger.WithField("addr", c.addr).Info("Serving")
 	http.Handle("/", m)
 	if !c.noop {
 		http.ListenAndServe(c.addr, nil)
@@ -113,9 +125,31 @@ func ServerMain(c *serverContext) int {
 
 // NewServer creates a martini.ClassicMartini based on server context
 func NewServer(c *serverContext) *martini.ClassicMartini {
-	m := martini.Classic()
-	m.Use(render.Renderer())
-	m.Use(func(res http.ResponseWriter, req *http.Request) {
+	r := martini.NewRouter()
+	m := martini.New()
+	m.Use(func(res http.ResponseWriter, req *http.Request, sc *serverContext, c martini.Context) {
+		start := time.Now()
+		sc.logger.WithFields(logrus.Fields{
+			"method": req.Method,
+			"path":   req.URL.Path,
+		}).Info("started")
+
+		rw := res.(martini.ResponseWriter)
+		c.Next()
+
+		sc.logger.WithFields(logrus.Fields{
+			"code":     rw.Status(),
+			"status":   http.StatusText(rw.Status()),
+			"duration": fmt.Sprintf("%v", time.Since(start)),
+		}).Info("completed")
+	})
+	m.Use(martini.Recovery())
+	m.MapTo(r, (*martini.Routes)(nil))
+	m.Action(r.Handle)
+
+	cm := &martini.ClassicMartini{m, r}
+	cm.Use(render.Renderer())
+	cm.Use(func(res http.ResponseWriter, req *http.Request) {
 		if req.URL.Path == "/ping" && req.Method == "GET" {
 			return
 		}
@@ -124,23 +158,23 @@ func NewServer(c *serverContext) *martini.ClassicMartini {
 			http.Error(res, "Not Authorized", http.StatusUnauthorized)
 		}
 	})
-	m.Use(func(res http.ResponseWriter) {
+	cm.Use(func(res http.ResponseWriter) {
 		res.Header().Set("Rtot-Version", VersionString)
 	})
-	m.Map(c)
+	cm.Map(c)
 
-	m.Get("/", root)
-	m.Delete("/", die)
+	cm.Get("/", root)
+	cm.Delete("/", die)
 
-	m.Get("/ping", ping)
+	cm.Get("/ping", ping)
 
-	m.Post("/jobs", createJob)
-	m.Get("/jobs", allJobs)
-	m.Get("/jobs/:id", getJob)
-	m.Delete("/jobs", delAllJobs)
-	m.Delete("/jobs/:id", delJob)
+	cm.Post("/jobs", createJob)
+	cm.Get("/jobs", allJobs)
+	cm.Get("/jobs/:id", getJob)
+	cm.Delete("/jobs", delAllJobs)
+	cm.Delete("/jobs/:id", delJob)
 
-	return m
+	return cm
 }
 
 func root(r render.Render, c *serverContext) {

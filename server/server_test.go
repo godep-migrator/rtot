@@ -6,21 +6,27 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/go-martini/martini"
 )
 
 var (
+	loggerBuilder = func() *logrus.Logger {
+		l := logrus.New()
+		l.Out = &logBuf
+		return l
+	}
 	logBuf bytes.Buffer
+	logger = loggerBuilder()
 
 	testServerContext = &serverContext{
-		logger:        log.New(&logBuf, "[rtot-test]", log.LstdFlags),
+		logger:        logger,
 		theBeginning:  time.Now(),
 		notAuthorized: defaultNotAuthorized,
 		rootMap:       defaultRootMap,
