@@ -14,7 +14,7 @@ end
 
 def post(options = {})
   request = Net::HTTP::Post.new(
-    options.fetch(:path), 'Rtot-Secret' => secret
+    options.fetch(:path), 'Authorization' => "rtot #{secret}"
   )
   request.body = options.fetch(:body)
   response = perform_request(request, port)
@@ -23,7 +23,9 @@ end
 
 def get(options = {})
   response = perform_request(
-    Net::HTTP::Get.new(options.fetch(:path), 'Rtot-Secret' => secret),
+    Net::HTTP::Get.new(
+			options.fetch(:path), 'Authorization' => "rtot #{secret}"
+		),
     port
   )
   { res: response, json: JSON.parse(response.body) }
@@ -31,7 +33,9 @@ end
 
 def delete(options = {})
   response = perform_request(
-    Net::HTTP::Delete.new(options.fetch(:path), 'Rtot-Secret' => secret),
+    Net::HTTP::Delete.new(
+			options.fetch(:path), 'Authorization' => "rtot #{secret}"
+		),
     port
   )
   { res: response, json: '' }

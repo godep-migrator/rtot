@@ -1,4 +1,4 @@
-package rtot
+package server
 
 import (
 	"fmt"

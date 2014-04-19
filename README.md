@@ -11,7 +11,7 @@ needs, right?
 ## No really
 
 Jobs live in memory and they aren't automatically garbage collected.
-Jobs run as the same user running the `rtot-server`.  SSL isn't built
+Jobs run as the same user running the `rtot`.  SSL isn't built
 in, so if you're feeling paranoid you should probably put this behind
 nginx or whatever.
 
@@ -20,13 +20,13 @@ nginx or whatever.
 Run the server somewhere:
 
 ``` bash
-rtot-server -a=':8457' -s='supersecret'
+rtot -a=':8457' -s='supersecret'
 ```
 
 Hit the server over HTTP:
 
 ``` bash
-curl -H 'Rtot-Secret: supersecret' \
+curl -H 'Authorization: rtot supersecret' \
   -d 'echo wat is happening' \
   http://other-server.example.com:8457/jobs
 ```
@@ -51,7 +51,7 @@ which returns the newly-created job, including its id and relative URL:
 Check back on that job:
 
 ``` bash
-curl -H 'Rtot-Secret: supersecret' \
+curl -H 'Authorization: rtot supersecret' \
   http://other-server.example.com:8457/jobs/0
 ```
 
@@ -107,7 +107,7 @@ As mentioned above, jobs are not automatically garbage collected.
 Instead, it's up to you to clean up after yourself:
 
 ``` bash
-curl -H 'Rtot-Secret: supersecret' \
+curl -H 'Authorization: rtot supersecret' \
   -X DELETE \
   http://other-server.example.com:8457/jobs/1
 ```
@@ -122,7 +122,7 @@ make it exit via the web, which is one way to restart it and/or purge
 all jobs:
 
 ``` bash
-curl -H 'Rtot-Secret: supersecret' \
+curl -H 'Authorization: rtot supersecret' \
   -X DELETE \
   http://other-server.example.com:8457/
 ```

@@ -1,7 +1,5 @@
 RTOT_PACKAGE := github.com/modcloth-labs/rtot
-TARGETS := \
-  $(RTOT_PACKAGE) \
-  $(RTOT_PACKAGE)/rtot-server
+TARGETS := $(RTOT_PACKAGE) $(RTOT_PACKAGE)/server
 
 VERSION_VAR := $(RTOT_PACKAGE).VersionString
 REPO_VERSION := $(shell git describe --always --dirty --tags)
@@ -26,7 +24,7 @@ coverage.html: coverage.out
 	$(GO) tool cover -html=$^ -o $@
 
 coverage.out:
-	$(GO) test -covermode=count -coverprofile=$@ $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(RTOT_PACKAGE)
+	$(GO) test -covermode=count -coverprofile=$@ $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(RTOT_PACKAGE)/server
 	$(GO) tool cover -func=$@
 
 testdeps:
@@ -36,10 +34,6 @@ build: deps
 	$(GO) install -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
 
 deps: mtbb
-	if [ ! -e $${GOPATH%%:*}/src/$(RTOT_PACKAGE) ] ; then \
-		mkdir -p $${GOPATH%%:*}/src/github.com/modcloth-labs ; \
-		ln -sv $(PWD) $${GOPATH%%:*}/src/$(RTOT_PACKAGE) ; \
-	fi
 	$(GO) get -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
 	$(GODEP) restore
 
@@ -51,7 +45,7 @@ clean:
 	rm -vf coverage.html coverage.out
 	$(GO) clean -x $(TARGETS) || true
 	if [ -d $${GOPATH%%:*}/pkg ] ; then \
-		find $${GOPATH%%:*}/pkg -name '*rtot*' -exec rm -v {} \; ; \
+		find $${GOPATH%%:*}/pkg -name '*rtot*' | xargs rm -rfv || true; \
 	fi
 
 save:
@@ -61,6 +55,6 @@ fmtpolice:
 	set -e; for f in $(shell git ls-files '*.go'); do gofmt $$f | diff -u $$f - ; done
 
 serve:
-	exec $${GOPATH%%:*}/bin/rtot-server -a=$(RTOT_HTTPADDR)
+	exec $${GOPATH%%:*}/bin/rtot -a=$(RTOT_HTTPADDR)
 
 .PHONY: all build clean deps serve test fmtpolice

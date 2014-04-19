@@ -1,4 +1,4 @@
-package rtot
+package server
 
 import (
 	"crypto/md5"
@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codegangsta/martini"
-	"github.com/codegangsta/martini-contrib/render"
+	"github.com/go-martini/martini"
+	"github.com/martini-contrib/render"
 )
 
 var (
@@ -86,7 +86,7 @@ func ServerMain(c *serverContext) int {
 	c.fl.Parse(c.args)
 
 	if *versionFlag {
-		fmt.Printf("rtot-server %v\n", VersionString)
+		fmt.Printf("rtot %v\n", VersionString)
 		os.Exit(0)
 	}
 
@@ -120,7 +120,7 @@ func NewServer(c *serverContext) *martini.ClassicMartini {
 			return
 		}
 
-		if req.Header.Get("Rtot-Secret") != c.secret {
+		if req.Header.Get("Authorization") != "rtot "+c.secret {
 			http.Error(res, "Not Authorized", http.StatusUnauthorized)
 		}
 	})

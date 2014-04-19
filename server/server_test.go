@@ -1,4 +1,4 @@
-package rtot
+package server
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/codegangsta/martini"
+	"github.com/go-martini/martini"
 )
 
 var (
@@ -55,7 +55,7 @@ func getResponse(verb, path, ctype string, body io.Reader, authd bool) *httptest
 	}
 
 	if authd {
-		req.Header.Set("Rtot-Secret", testServerContext.secret)
+		req.Header.Set("Authorization", "rtot "+testServerContext.secret)
 	}
 
 	m.ServeHTTP(hr, req)

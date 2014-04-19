@@ -1,4 +1,4 @@
-package rtot
+package server
 
 var (
 	// VersionString is the git description

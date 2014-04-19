@@ -1,4 +1,4 @@
-package rtot
+package server
 
 type jobResponse struct {
 	Jobs []*jobJSON `json:"jobs"`

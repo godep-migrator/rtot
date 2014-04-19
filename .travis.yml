@@ -1,7 +1,7 @@
 ---
 language: go
 go:
-- 1.2
+- 1.2.1
 - tip
 env:
   global:
@@ -27,7 +27,7 @@ deploy:
   upload-dir: artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/rtot/$TRAVIS_COMMIT
   on:
     all_branches: true
-    go: 1.2
+    go: 1.2.1
 - provider: s3
   access_key_id:
     secure: "DqIQZa4h8OcSG8AdGVeuW9S8KzU+Gqi5eDq1ry1/1tgQo47lNNiz8Wuj2ykUQB4arF9Ur5KjwvgIs3bY/auZ+oG+2xnqgRvNZqpLXegNH7/QY1l4bDAvS/pSuROuhNN17NtcOwv3FU6gG69LfHPi+PSXXOApuv8PMYIIeqq+3V4="
@@ -39,7 +39,7 @@ deploy:
   upload-dir: artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/rtot/$TRAVIS_BRANCH
   on:
     all_branches: true
-    go: 1.2
+    go: 1.2.1
 - provider: s3
   access_key_id:
     secure: "DqIQZa4h8OcSG8AdGVeuW9S8KzU+Gqi5eDq1ry1/1tgQo47lNNiz8Wuj2ykUQB4arF9Ur5KjwvgIs3bY/auZ+oG+2xnqgRvNZqpLXegNH7/QY1l4bDAvS/pSuROuhNN17NtcOwv3FU6gG69LfHPi+PSXXOApuv8PMYIIeqq+3V4="
@@ -51,12 +51,12 @@ deploy:
   upload-dir: artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/rtot/$(git describe --always --tags)
   on:
     all_branches: true
-    go: 1.2
+    go: 1.2.1
 after_success:
 - mkdir -p $TRAVIS_BUILD_DIR/build/rtot
            $TRAVIS_BUILD_DIR/build/.tarball &&
   cd $TRAVIS_BUILD_DIR &&
-  cp $HOME/gopath/bin/rtot-server $TRAVIS_BUILD_DIR/build/rtot/ &&
+  cp $HOME/gopath/bin/rtot $TRAVIS_BUILD_DIR/build/rtot/ &&
   git archive HEAD | bzip2 >
     $TRAVIS_BUILD_DIR/build/.tarball/rtot.src.tar.bz2 &&
   cd $TRAVIS_BUILD_DIR/build &&

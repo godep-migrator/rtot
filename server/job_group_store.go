@@ -1,4 +1,4 @@
-package rtot
+package server
 
 type jobGroupStore interface {
 	Add(*job) int
