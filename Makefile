@@ -1,16 +1,16 @@
 RTOT_PACKAGE := github.com/modcloth-labs/rtot
 TARGETS := $(RTOT_PACKAGE) $(RTOT_PACKAGE)/server
 
-VERSION_VAR := $(RTOT_PACKAGE).VersionString
+VERSION_VAR := $(RTOT_PACKAGE)/server.VersionString
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 
-REV_VAR := $(RTOT_PACKAGE).RevisionString
+REV_VAR := $(RTOT_PACKAGE)/server.RevisionString
 REPO_REV := $(shell git rev-parse --sq HEAD)
 
 GO ?= go
 GODEP ?= godep
 GO_TAG_ARGS ?= -tags full
-TAGS_VAR := $(RTOT_PACKAGE).BuildTags
+TAGS_VAR := $(RTOT_PACKAGE)/server.BuildTags
 GOBUILD_LDFLAGS := -ldflags "-X $(VERSION_VAR) $(REPO_VERSION) -X $(REV_VAR) $(REPO_REV) -X $(TAGS_VAR) '$(GO_TAG_ARGS)' "
 
 RTOT_HTTPADDR ?= :8457
