@@ -67,6 +67,24 @@ type serverContext struct {
 	noop bool
 }
 
+type errorsResponseItem struct {
+	Message string `json:"message"`
+	Code    string `json:"code"`
+}
+
+type errorsResponse struct {
+	Errors []*errorsResponseItem `json:"errors"`
+}
+
+type pingResponseItem struct {
+	Message string `json:"message"`
+	Uptime  string `json:"uptime"`
+}
+
+type pingResponse struct {
+	Ping []*pingResponseItem `json:"ping"`
+}
+
 // ServerMain is the entry point for the server executable
 func ServerMain(c *serverContext) int {
 	if c == nil {
@@ -182,9 +200,13 @@ func root(r render.Render, c *serverContext) {
 }
 
 func ping(r render.Render, c *serverContext) {
-	r.JSON(200, &map[string]string{
-		"message": "still here",
-		"uptime":  time.Now().Sub(c.theBeginning).String(),
+	r.JSON(200, &pingResponse{
+		Ping: []*pingResponseItem{
+			&pingResponseItem{
+				Message: "still here",
+				Uptime:  time.Now().Sub(c.theBeginning).String(),
+			},
+		},
 	})
 }
 
@@ -320,8 +342,13 @@ func sendInvalidJob400(r render.Render, i string) {
 func getMainJobGroupOr500(r render.Render) (*jobGroup, bool) {
 	jobs := GetJobGroup("main")
 	if jobs == nil {
-		r.JSON(500, map[string]string{
-			"error": "missing main job group",
+		r.JSON(500, &errorsResponse{
+			Errors: []*errorsResponseItem{
+				&errorsResponseItem{
+					Message: "missing main job group",
+					Code:    "0",
+				},
+			},
 		})
 		return nil, false
 	}
