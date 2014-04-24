@@ -8,4 +8,4 @@ ln -svf /vagrant/.vagrant-skel/bash_profile ~/.bash_profile
 
 source ~/.bashrc
 
-go get -x github.com/kr/godep
+go get -x github.com/tools/godep

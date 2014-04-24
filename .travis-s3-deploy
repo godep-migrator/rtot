@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+
+if [[ ! "$TRAVIS_BUILD_DIR" ]] ; then
+  echo 'NOPE, NO TRAVIS BUILD DIR.'
+  exit 1
+fi
+
+if [[ "$TRAVIS_GO_VERSION" != "$DEPLOY_GO_VERSION" ]] ; then
+  echo 'WRONG GO VERSION.  DO NOT DO.'
+  exit 2
+fi
+
+GOOS="$(go env GOOS)"
+GOARCH="$(go env GOARCH)"
+S3_BUCKET='modcloth-public-travis-artifacts'
+
+mkdir -p "$TRAVIS_BUILD_DIR/build/rtot" "$TRAVIS_BUILD_DIR/build/.tarball"
+
+cd "$TRAVIS_BUILD_DIR"
+cp ~/gopath/bin/rtot "$TRAVIS_BUILD_DIR/build/rtot/"
+git archive HEAD | bzip2 > "$TRAVIS_BUILD_DIR/build/.tarball/rtot.src.tar.bz2"
+
+cd "$TRAVIS_BUILD_DIR/build"
+tar cjvf rtot.tar.bz2 rtot
+mv -v rtot.tar.bz2 .tarball/
+cd .tarball/
+sha256sum rtot.tar.bz2 rtot.src.tar.bz2 > SHA256SUMS
+
+cd "$TRAVIS_BUILD_DIR"
+sudo pip install awscli
+
+for dest in "$TRAVIS_COMMIT" "$TRAVIS_BRANCH" $(git describe --always --tags) ; do
+  fulldest="$S3_BUCKET/artifacts/binaries/${GOOS}/${GOARCH}/rtot/${dest}"
+  echo "---> S3 deploy to $fulldest"
+  aws s3 cp \
+    "$TRAVIS_BUILD_DIR/build/.tarball/" "s3://$fulldest" \
+    --recursive \
+    --acl 'public-read'
+done
