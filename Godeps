@@ -7,7 +7,7 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Rev": "c63fbfb0fda71a4afd624714a5fdd9a37a1e61f7"
+			"Rev": "d4ada4466b1f797ca9aee2bc6bed46dcdfa731ae"
 		},
 		{
 			"ImportPath": "github.com/burke/ttyutils",
@@ -15,7 +15,7 @@
 		},
 		{
 			"ImportPath": "github.com/codegangsta/inject",
-			"Rev": "9aea7a2fa5b79ef7fc00f63a575e72df33b4e886"
+			"Rev": "1817ef28a0e76985d513785871920d9f0c3df187"
 		},
 		{
 			"ImportPath": "github.com/go-martini/martini",
