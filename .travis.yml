@@ -6,6 +6,7 @@ env:
   global:
   - PATH=$HOME/gopath/bin:$PATH
   - DEPLOY_GO_VERSION=go1.2.1
+  - GOBUILD_FLAGS="-x -v"
   - secure: ZakkKI2eaUPMHZPA0A6xF7vSb6mJz6/c3/KtT1jt4mnxPcYrn0caMcpMa/xgki0IHAZ/XUBQqq8aNAZI6X2KIXUsvwMD0SVXs+dLVokOQhkoUwPbx2w2iXAo3tJzNVGJVyC3tINTt7zGlf3Rr22hbRxOUmPXCR8qqkwgdK0L0k8=
   - secure: FwK1tfjHmFh4lacdabrjlQsh5S/jU+KVyRb0wWfYBo1t8i2HfQs3fQB2LqpOz+hqeUlSmaq/TUrxK3CMpuCjGtJN9J21sYtl/qjRLC+dn31UZVizFs9MrfAay83wTz2fWIG4qe4M6Vb7qGMAN1twFkApogHQQztp1HXYHf/xAgo=
 before_install:

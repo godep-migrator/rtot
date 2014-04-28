@@ -12,6 +12,7 @@ GODEP ?= godep
 GO_TAG_ARGS ?= -tags full
 TAGS_VAR := $(RTOT_PACKAGE)/server.BuildTags
 GOBUILD_LDFLAGS := -ldflags "-X $(VERSION_VAR) $(REPO_VERSION) -X $(REV_VAR) $(REPO_REV) -X $(TAGS_VAR) '$(GO_TAG_ARGS)' "
+GOBUILD_FLAGS ?=
 
 RTOT_HTTPADDR ?= :8457
 
@@ -24,26 +25,26 @@ coverage.html: coverage.out
 	$(GO) tool cover -html=$^ -o $@
 
 coverage.out:
-	$(GO) test -covermode=count -coverprofile=$@ $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(RTOT_PACKAGE)/server
+	$(GO) test -covermode=count -coverprofile=$@ $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) $(GOBUILD_FLAGS) $(RTOT_PACKAGE)/server
 	$(GO) tool cover -func=$@
 
 testdeps:
-	$(GO) test -i $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x -v $(TARGETS)
+	$(GO) test -i $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) $(GOBUILD_FLAGS) $(TARGETS)
 
 build: deps
-	$(GO) install -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
+	$(GO) install $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) $(TARGETS)
 
 deps: mtbb
-	$(GO) get -x $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) -x $(TARGETS)
+	$(GO) get $(GOBUILD_FLAGS) $(GOBUILD_LDFLAGS) $(GO_TAG_ARGS) $(TARGETS)
 	$(GODEP) restore
 
 mtbb:
-	curl -s -o mtbb https://raw.github.com/modcloth-labs/mtbb/master/lib/mtbb.rb
+	curl -sL -o mtbb https://raw.github.com/modcloth-labs/mtbb/master/lib/mtbb.rb
 	chmod +x mtbb
 
 clean:
 	rm -vf coverage.html coverage.out
-	$(GO) clean -x $(TARGETS) || true
+	$(GO) clean $(TARGETS) || true
 	if [ -d $${GOPATH%%:*}/pkg ] ; then \
 		find $${GOPATH%%:*}/pkg -name '*rtot*' | xargs rm -rfv || true; \
 	fi
