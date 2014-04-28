@@ -1,7 +1,11 @@
 rtot
 ====
 
-**R**un **T**his **O**ver **T**here (<q>Arr-tot</q>)
+<strong>R</strong>un
+<strong>T</strong>his
+<strong>O</strong>ver
+<strong>T</strong>here
+(<q>Arr-tot</q>)
 
 Another async remote execution thing because that's just what the world
 needs, right?
